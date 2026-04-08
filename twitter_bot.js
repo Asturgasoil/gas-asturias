@@ -42,6 +42,7 @@ async function run() {
   console.log(`--- Iniciando Bot de X (${mode}) vía OAuth 2.0 ---`);
   
   try {
+    // 1. Obtener el refresh token de Supabase
     const { data: dbData, error: dbError } = await supabase
       .from('twitter_tokens')
       .select('token_value')
@@ -50,12 +51,18 @@ async function run() {
 
     if (dbError || !dbData) throw new Error('No hay refresh_token en Supabase.');
 
+    // 2. Refrescar el token con X
     const client = new TwitterApi({ clientId: clientID, clientSecret: clientSecret });
     const { client: refreshedClient, refreshToken: newRefreshToken } = await client.refreshOAuth2Token(dbData.token_value);
 
+    // 3. Guardar el nuevo refresh token
     console.log('Actualizando refresh_token en Supabase...');
-    await supabase.from('twitter_tokens').update({ token_value: newRefreshToken, updated_at: new Date().toISOString() }).eq('token_name', 'refresh_token');
+    await supabase.from('twitter_tokens').update({ 
+      token_value: newRefreshToken, 
+      updated_at: new Date().toISOString() 
+    }).eq('token_name', 'refresh_token');
 
+    // 4. Obtener precios y preparar tweet
     const { data: prices } = await supabase.from('prices').select('*').order('created_at', { ascending: false }).limit(300);
     if (!prices || prices.length === 0) return;
 
@@ -74,14 +81,18 @@ async function run() {
     if (cholloDiesel) tweetText += `🟡 Diésel: ${cholloDiesel.price_diesel.toFixed(3)}€ en ${cholloDiesel.name} (${cholloDiesel.municipality})\n`;
     tweetText += `\n📍 Web: ${WEB_URL}${HASHTAGS}`;
 
+    // 5. Publicar el tweet
     const { data: createdTweet } = await refreshedClient.v2.tweet(tweetText);
     console.log(`✅ ¡Tweet publicado! ID: ${createdTweet.id}`);
 
   } catch (err) {
-    console.error('❌ Error fatal:', err.message || err);
+    if (err.data) {
+      console.error('❌ ERROR DETALLADO DE TWITTER:', JSON.stringify(err.data, null, 2));
+    } else {
+      console.error('❌ Error fatal:', err.message || err);
+    }
     process.exit(1);
   }
 }
 
 run();
-
