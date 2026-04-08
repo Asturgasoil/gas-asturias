@@ -44,7 +44,7 @@ async function run() {
         const zone = getZone(s.Municipio);
         if (!zone) return null;
 
-        // SAFE PARSING OF PRICES
+        // SAFE PARSING OF PRICES (Note: Use "Gasoleo" without accent for the API key)
         const p95 = s['Precio Gasolina 95 E5'];
         const pDiesel = s['Precio Gasoleo A'];
 
@@ -90,4 +90,3 @@ async function run() {
 }
 
 run();
-
