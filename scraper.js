@@ -46,7 +46,7 @@ async function run() {
 
         // SAFE PARSING OF PRICES
         const p95 = s['Precio Gasolina 95 E5'];
-        const pDiesel = s['Precio Gasóleo A'];
+        const pDiesel = s['Precio Gasoleo A'];
 
         return {
           station_name: s.Rótulo,
