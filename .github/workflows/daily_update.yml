@@ -2,7 +2,7 @@ name: Daily Gas Price Update
 
 on:
   schedule:
-    - cron: '15 6 * * *' # 08:15 AM Madrid (Post principal)
+    - cron: '15 6 * * *' # 08:15 AM Madrid (CEST)
   workflow_dispatch: 
 
 jobs:
@@ -30,8 +30,6 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          X_API_KEY: ${{ secrets.X_API_KEY }}
-          X_API_SECRET: ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          X_CLIENT_ID: ${{ secrets.X_CLIENT_ID }}
+          X_CLIENT_SECRET: ${{ secrets.X_CLIENT_SECRET }}
         run: node twitter_bot.js morning
