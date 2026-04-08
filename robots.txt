@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://asturgasoil.github.io/gas-asturias/sitemap.xml
