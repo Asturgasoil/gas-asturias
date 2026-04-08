@@ -20,9 +20,10 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- CONFIGURACIÓN (Mantén tus claves de Supabase aquí) ---
-        const SUPABASE_URL = 'https://tvfocqoyqivayfocqoyq.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Asegúrate de que esta sea tu clave real
+        // --- CONFIGURACIÓN ---
+        // Pega tus claves reales entre las comillas simples de abajo
+        const SUPABASE_URL = 'https://qbuvcyggfmbkdifkamyq.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_6VntxupDrFBc-PIXtMQoMw_pJ0uzxzd';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const ZONES = ['OVIEDO', 'GIJON', 'AVILES', 'CUENCAS', 'ORIENTAL', 'OCCIDENTAL'];
@@ -31,7 +32,6 @@
             const [data, setData] = useState([]);
             const [loading, setLoading] = useState(true);
             const [fuelType, setFuelType] = useState('price_95');
-            const [error, setError] = useState(null);
 
             useEffect(() => {
                 const today = new Date().toLocaleDateString('es-ES');
@@ -40,19 +40,23 @@
             }, []);
 
             async function fetchData() {
+                if (SUPABASE_URL === 'VITE_SUPABASE_URL') {
+                    setLoading(false);
+                    return;
+                }
                 try {
                     const { data: records, error } = await supabase
                         .from('prices')
                         .select('*')
                         .order('created_at', { ascending: false })
-                        .limit(1000); // Límite aumentado para cubrir toda Asturias
+                        .limit(1000); 
                     if (error) throw error;
                     if (records && records.length > 0) {
                         const lastDate = records[0].created_at;
                         setData(records.filter(r => r.created_at === lastDate));
                     }
                 } catch (err) {
-                    setError('Error de conexión.');
+                    console.error('Error de base de datos:', err);
                 } finally {
                     setLoading(false);
                 }
@@ -62,7 +66,7 @@
             const getZoneBest = (zone, type) => data.filter(s => s.zone === zone && s[type]).sort((a,b) => a[type] - b[type])[0];
             const chollo = getBest(fuelType);
 
-            if (loading) return <div className="h-screen flex items-center justify-center font-bold text-blue-600 italic">Buscando los mejores precios para ti...</div>;
+            if (loading) return <div className="h-screen flex items-center justify-center font-black text-blue-600 italic animate-pulse">Buscando los mejores precios para ti...</div>;
 
             return (
                 <div className="pb-20 bg-blue-50/20">
@@ -74,7 +78,7 @@
                             </div>
                             <h1 className="text-xl font-black text-blue-900 tracking-tighter italic">AsturGasoil</h1>
                         </div>
-                        <div className="bg-blue-100 p-1 rounded-full flex text-xs font-bold">
+                        <div className="bg-blue-100 p-1 rounded-full flex text-xs font-bold shadow-inner">
                             <button onClick={() => setFuelType('price_95')} className={`px-4 py-1 rounded-full transition-all ${fuelType === 'price_95' ? 'bg-blue-600 text-white shadow-md' : 'text-blue-800'}`}>95</button>
                             <button onClick={() => setFuelType('price_diesel')} className={`px-4 py-1 rounded-full transition-all ${fuelType === 'price_diesel' ? 'bg-blue-600 text-white shadow-md' : 'text-blue-800'}`}>Diesel</button>
                         </div>
@@ -83,38 +87,38 @@
                     <main className="max-w-md mx-auto px-4 pt-6 space-y-6">
                         <section className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-4 z-10">
-                                <div className="bg-yellow-400 text-blue-900 px-3 py-1 rounded-full text-[10px] font-black shadow-lg uppercase">¡Chollo Localizado! 🔥</div>
+                                <div className="bg-yellow-400 text-blue-900 px-3 py-1 rounded-full text-[10px] font-black shadow-lg uppercase tracking-tight italic shadow-yellow-200/20">EL MÁS BARATO DE HOY 🔥</div>
                             </div>
-                            <h2 className="text-blue-100 font-bold text-xs uppercase tracking-[0.2em] mb-3">ASTURIAS: EL MÁS BARATO</h2>
+                            <h2 className="text-blue-100 font-bold text-xs uppercase tracking-[0.2em] mb-3 opacity-80 italic italic">GASOLINERA MÁS BARATA DE ASTURIAS</h2>
                             {chollo ? (
                                 <>
                                     <div className="flex items-baseline gap-1 mb-6">
-                                        <span className="text-7xl font-black tracking-tighter text-yellow-400">{chollo[fuelType].toFixed(3)}</span>
+                                        <span className="text-7xl font-black tracking-tighter text-yellow-400 drop-shadow-md">{chollo[fuelType].toFixed(3)}</span>
                                         <span className="text-2xl opacity-70 font-medium italic">€/L</span>
                                     </div>
                                     <div className="mb-8 border-l-4 border-yellow-400 pl-4">
-                                        <p className="font-black text-xl leading-tight text-white">{chollo.station_name}</p>
-                                        <p className="text-sm text-blue-100 opacity-80 mt-1 uppercase italic tracking-wider">{chollo.municipality}</p>
+                                        <p className="font-black text-xl leading-tight text-white mb-1">{chollo.station_name}</p>
+                                        <p className="text-xs text-blue-100 opacity-80 uppercase tracking-widest">{chollo.municipality}</p>
                                     </div>
                                     <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(chollo.station_name + ' ' + chollo.municipality)}`} 
-                                       target="_blank" className="w-full bg-yellow-400 text-blue-900 py-5 rounded-2xl font-black text-center block shadow-2xl transition-transform active:scale-95">📍 Navegar ahora</a>
+                                       target="_blank" className="w-full bg-yellow-400 text-blue-900 py-5 rounded-2xl font-black text-center block shadow-2xl transition-transform active:scale-95 shadow-yellow-200/20">📍 Navegar ahora</a>
                                 </>
-                            ) : <p>Cargando información actualizada...</p>}
+                            ) : <p className="opacity-50 italic">Cargando precios...</p>}
                         </section>
 
                         <div className="space-y-4">
-                            <h3 className="text-lg font-black text-blue-950 px-2 italic flex items-center gap-2">
+                            <h3 className="text-lg font-black text-blue-950 px-2 italic flex items-center gap-2 tracking-tight">
                                 <span className="w-2 h-5 bg-blue-600 rounded-full"></span>
                                 Clasificación por Zonas en Asturias
                             </h3>
                             {ZONES.map((zone) => {
                                 const best = getZoneBest(zone, fuelType);
                                 return (
-                                    <div key={zone} className="bg-white border border-blue-50 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-shadow">
+                                    <div key={zone} className="bg-white border border-blue-50/50 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-shadow">
                                         <div className="flex justify-between items-center">
-                                            <h4 className="font-black text-blue-800 uppercase text-xs tracking-wider">{zone}</h4>
+                                            <h4 className="font-black text-blue-800 uppercase text-xs tracking-wider opacity-60">{zone}</h4>
                                             <div className="text-right">
-                                                <span className="text-2xl font-black text-blue-600 italic">
+                                                <span className="text-2xl font-black text-blue-600 italic tracking-tighter">
                                                     {best ? best[fuelType].toFixed(3) : '---'}
                                                 </span>
                                                 <span className="text-[10px] font-bold text-gray-400 ml-1">€/L</span>
@@ -124,10 +128,10 @@
                                             <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-end">
                                                 <div className="max-w-[150px]">
                                                     <p className="text-[10px] font-black text-slate-800 truncate leading-tight uppercase">{best.station_name}</p>
-                                                    <p className="text-[9px] text-slate-400 truncate mt-1 italic">{best.municipality}</p>
+                                                    <p className="text-[9px] text-slate-400 truncate mt-1 italic tracking-tight">{best.municipality}</p>
                                                 </div>
                                                 <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(best.station_name + ' ' + best.municipality)}`} 
-                                                   target="_blank" className="bg-blue-50 text-blue-700 px-4 py-2 rounded-xl text-center font-black text-[9px] uppercase italic">📍 Mapa</a>
+                                                   target="_blank" className="bg-blue-50 text-blue-700 px-4 py-2 rounded-xl text-center font-black text-[9px] uppercase italic hover:bg-blue-100 transition-colors">📍 Mapa</a>
                                             </div>
                                         )}
                                     </div>
@@ -136,8 +140,9 @@
                         </div>
                     </main>
 
-                    <footer className="py-12 px-8 text-center text-[10px] text-blue-400/60 font-black uppercase italic tracking-widest">
-                         AsturGasoil • El Paraíso del Ahorro 💙💛
+                    <footer className="py-20 px-8 text-center text-[10px] text-blue-400/40 font-black uppercase italic tracking-[0.2em] leading-loose">
+                         AsturGasoil • El Paraíso del Ahorro 💙💛 <br/>
+                         Información pública del MITECO
                     </footer>
                 </div>
             );
