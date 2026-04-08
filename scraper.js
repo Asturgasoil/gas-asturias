@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const fetch = require('node-fetch');
 
-// Environment Variables (Defined in GitHub Secrets or locally)
+// Environment Variables
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
@@ -14,7 +14,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const API_URL = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/33';
 
-// Simplified Zone Mapping
 const ZONES = {
   'OVIEDO': ['OVIEDO'],
   'GIJON': ['GIJÓN'],
@@ -45,13 +44,17 @@ async function run() {
         const zone = getZone(s.Municipio);
         if (!zone) return null;
 
+        // SAFE PARSING OF PRICES
+        const p95 = s['Precio Gasolina 95 E5'];
+        const pDiesel = s['Precio Gasóleo A'];
+
         return {
           station_name: s.Rótulo,
           address: s.Dirección,
           municipality: s.Municipio,
           zone: zone,
-          price_95: parseFloat(s['Precio Gasolina 95 E5'].replace(',', '.')) || null,
-          price_diesel: parseFloat(s['Precio Gasóleo A'].replace(',', '.')) || null,
+          price_95: p95 ? parseFloat(p95.replace(',', '.')) : null,
+          price_diesel: pDiesel ? parseFloat(pDiesel.replace(',', '.')) : null,
           created_at: new Date().toISOString()
         };
       })
@@ -62,7 +65,6 @@ async function run() {
       return;
     }
 
-    // Find the cheapest in Asturias
     const cheapest95 = [...filtered].filter(s => s.price_95).sort((a,b) => a.price_95 - b.price_95)[0];
     const cheapestDiesel = [...filtered].filter(s => s.price_diesel).sort((a,b) => a.price_diesel - b.price_diesel)[0];
 
