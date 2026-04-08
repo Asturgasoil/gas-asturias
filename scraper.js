@@ -1,13 +1,13 @@
 const { createClient } = require('@supabase/supabase-js');
-const { fetch } = require('undici'); // Usamos undici que es más moderno para Node 18+
 
-// Environment Variables
+// Configuración de Supabase (GitHub sacará esto de tus Secrets)
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const API_URL = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/33';
 
+// Mapeo de zonas de Asturias
 const ZONES = {
   'OVIEDO': ['OVIEDO'],
   'GIJON': ['GIJÓN', 'GIJON'],
@@ -27,7 +27,7 @@ function getZone(municipio) {
 }
 
 async function run() {
-  // CLAVE: Generamos UNA SOLA HORA para todo el lote
+  // Generamos una sola hora para que todas las gasolineras del lote coincidan
   const batchTimestamp = new Date().toISOString(); 
   console.log(`--- Iniciando Scraper Asturias (${batchTimestamp}) ---`);
 
@@ -51,7 +51,7 @@ async function run() {
           zone: zone,
           price_95: p95 ? parseFloat(p95.replace(',', '.')) : null,
           price_diesel: pDiesel ? parseFloat(pDiesel.replace(',', '.')) : null,
-          created_at: batchTimestamp // Usamos la misma hora para todos
+          created_at: batchTimestamp 
         };
       })
       .filter(s => s !== null && (s.price_95 !== null || s.price_diesel !== null));
@@ -61,26 +61,28 @@ async function run() {
       return;
     }
 
-    // Buscamos los más baratos de toda Asturias de este lote
+    // Identificamos los más baratos del lote
     const cheapest95 = [...filtered].filter(s => s.price_95).sort((a,b) => a.price_95 - b.price_95)[0];
     const cheapestDiesel = [...filtered].filter(s => s.price_diesel).sort((a,b) => a.price_diesel - b.price_diesel)[0];
 
+    // Marcamos los chollos antes de subir
     const finalData = filtered.map(s => ({
       ...s,
       is_cheapest_asturias_95: cheapest95 && s.station_name === cheapest95.station_name && s.address === cheapest95.address,
       is_cheapest_asturias_diesel: cheapestDiesel && s.station_name === cheapestDiesel.station_name && s.address === cheapestDiesel.address
     }));
 
-    console.log(`Subiendo ${finalData.length} registros a Supabase...`);
+    console.log(`Guardando ${finalData.length} estaciones en Supabase...`);
     const { error } = await supabase.from('prices').insert(finalData);
 
     if (error) throw error;
-    console.log("✅ Datos actualizados correctamente.");
+    console.log("✅ ¡Base de datos actualizada con éxito!");
 
   } catch (err) {
-    console.error("❌ Fallo en el Scraper:", err);
+    console.error("❌ Error en la descarga:", err.message);
     process.exit(1);
   }
 }
 
 run();
+
