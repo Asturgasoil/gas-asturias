@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gasolineras Asturias - Precios al día</title>
-    <!-- Dependencias de React y Estilos -->
+    <title>AsturGasoil - Precios de gasolina en Asturias</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -22,7 +21,6 @@
         const { useState, useEffect } = React;
 
         // --- CONFIGURACIÓN ---
-        // DEBES PONER TUS CREDENCIALES AQUÍ:
         const SUPABASE_URL = 'https://qbuvcyggfmbkdifkamyq.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_6VntxupDrFBc-PIXtMQoMw_pJ0uzxzd';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -37,14 +35,14 @@
 
             useEffect(() => {
                 const today = new Date().toLocaleDateString('es-ES');
-                document.title = `Gasolineras más baratas en Asturias hoy ${today}`;
+                document.title = `Gasolineras baratas en Asturias hoy ${today} | AsturGasoil`;
                 fetchData();
             }, []);
 
             async function fetchData() {
                 if (SUPABASE_URL === 'TU_URL_DE_SUPABASE') {
                     setLoading(false);
-                    setError('Introduce tus credenciales de Supabase en el código (líneas 24 y 25).');
+                    setError('Introduce tus credenciales de Supabase.');
                     return;
                 }
                 try {
@@ -52,14 +50,14 @@
                         .from('prices')
                         .select('*')
                         .order('created_at', { ascending: false })
-                        .limit(200);
+                        .limit(300);
                     if (error) throw error;
                     if (records && records.length > 0) {
                         const lastDate = records[0].created_at;
                         setData(records.filter(r => r.created_at === lastDate));
                     }
                 } catch (err) {
-                    setError('Error de conexión con la base de datos de Supabase.');
+                    setError('Error de conexión.');
                 } finally {
                     setLoading(false);
                 }
@@ -69,12 +67,17 @@
             const getZoneBest = (zone, type) => data.filter(s => s.zone === zone && s[type]).sort((a,b) => a[type] - b[type])[0];
             const chollo = getBest(fuelType);
 
-            if (loading) return <div className="h-screen flex items-center justify-center font-bold text-emerald-600">Cargando ahorros...</div>;
+            if (loading) return <div className="h-screen flex items-center justify-center font-bold text-emerald-600">Buscando ahorros en Asturias...</div>;
 
             return (
                 <div className="pb-20">
                     <header className="bg-white border-b sticky top-0 z-50 p-4 flex justify-between items-center shadow-sm">
-                        <h1 className="text-xl font-black text-emerald-800">AsturGasol</h1>
+                        <div className="flex items-center gap-2">
+                             <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+                                <span className="text-white font-black italic">A</span>
+                            </div>
+                            <h1 className="text-xl font-black text-emerald-800 tracking-tighter">AsturGasoil</h1>
+                        </div>
                         <div className="bg-emerald-100 p-1 rounded-full flex text-xs font-bold">
                             <button onClick={() => setFuelType('price_95')} className={`px-4 py-1 rounded-full ${fuelType === 'price_95' ? 'bg-emerald-600 text-white shadow-md' : 'text-emerald-800'}`}>95</button>
                             <button onClick={() => setFuelType('price_diesel')} className={`px-4 py-1 rounded-full ${fuelType === 'price_diesel' ? 'bg-emerald-600 text-white shadow-md' : 'text-emerald-800'}`}>Diesel</button>
@@ -82,12 +85,16 @@
                     </header>
 
                     <main className="max-w-md mx-auto px-4 pt-6 space-y-6">
-                        {/* Espacio Publicitario 1 */}
-                        <div className="bg-emerald-50 border-2 border-dashed rounded-xl h-20 flex items-center justify-center text-emerald-300 font-bold text-xs uppercase tracking-widest italic">Espacio Publicitario</div>
+                        {/* Mensaje SEO 1 */}
+                        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-center">
+                            <p className="text-emerald-800 font-bold text-sm leading-tight">
+                                💰 ¡Ahorra hasta 15€ por depósito! <br/>
+                                <span className="text-[10px] font-medium opacity-70 italic text-emerald-600 uppercase tracking-widest">Las gasolineras más baratas de Asturias hoy</span>
+                            </p>
+                        </div>
 
-                        {/* El Chollo Hero */}
                         <section className="bg-gradient-to-br from-emerald-600 to-emerald-900 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden">
-                            <h2 className="text-xs font-bold uppercase tracking-widest opacity-80 mb-2">El Chollo de Hoy en Asturias</h2>
+                            <h2 className="text-xs font-bold uppercase tracking-widest opacity-80 mb-2 font-mono">El Chollo de Hoy en Asturias</h2>
                             {chollo ? (
                                 <>
                                     <div className="flex items-baseline gap-1 mb-4">
@@ -101,16 +108,19 @@
                                     <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(chollo.address + ' ' + chollo.municipality)}`} 
                                        target="_blank" className="w-full bg-white text-emerald-900 py-4 rounded-2xl font-black text-center block shadow-lg active:scale-95 transition-transform">🚀 Ir ahora</a>
                                 </>
-                            ) : <p>Sin datos todavía</p>}
+                            ) : <p>Cargando datos...</p>}
                         </section>
 
                         <div className="space-y-4">
-                            <h3 className="text-lg font-black text-emerald-950 px-2 italic">Mejores precios por Zona</h3>
+                            <h3 className="text-lg font-black text-emerald-950 px-2 italic flex items-center gap-2">
+                                <span className="w-2 h-4 bg-emerald-500 rounded-full"></span>
+                                Clasificación por Zonas en Asturias
+                            </h3>
                             {ZONES.map((zone, idx) => {
                                 const best = getZoneBest(zone, fuelType);
                                 return (
                                     <div key={zone}>
-                                        <div className="bg-white border border-emerald-50 rounded-3xl p-6 shadow-sm">
+                                        <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow">
                                             <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-3">
                                                 <h4 className="font-black text-emerald-800 uppercase text-sm tracking-tighter">{zone}</h4>
                                                 <span className="text-xl font-black text-emerald-600 italic">
@@ -119,23 +129,37 @@
                                             </div>
                                             {best && (
                                                 <div className="space-y-4">
-                                                    <p className="text-[10px] text-gray-500 truncate">{best.station_name} • {best.address}</p>
+                                                    <div>
+                                                        <p className="text-[10px] font-bold text-gray-800 truncate leading-tight">{best.station_name}</p>
+                                                        <p className="text-[10px] text-gray-400 truncate mt-1 italic">{best.address}</p>
+                                                    </div>
                                                     <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(best.address + ' ' + best.municipality)}`} 
-                                                       target="_blank" className="bg-emerald-50 text-emerald-700 py-3 rounded-xl block text-center font-black text-xs uppercase italic">📍 Ubicación</a>
+                                                       target="_blank" className="bg-emerald-50 text-emerald-700 py-3 rounded-xl block text-center font-black text-[10px] uppercase italic">📍 Ver en Mapa</a>
                                                 </div>
                                             )}
                                         </div>
-                                        {/* Publicidad intermedia */}
-                                        {idx === 2 && <div className="mt-4 bg-emerald-50 border-2 border-dashed rounded-xl h-20 flex items-center justify-center text-emerald-300 font-bold text-xs uppercase tracking-widest italic">Espacio Publicitario</div>}
+                                        {/* SEO Interstitial */}
+                                        {idx === 2 && (
+                                            <div className="mt-6 bg-emerald-900 text-white rounded-2xl p-5 text-center shadow-lg relative overflow-hidden">
+                                                <div className="absolute -top-4 -right-4 w-20 h-20 bg-emerald-600 rounded-full opacity-20"></div>
+                                                <p className="text-xs font-bold leading-tight relative">
+                                                    📍 Asturias - Paraíso Natural y Ahorro <br/>
+                                                    <span className="text-[9px] opacity-60 font-medium">Actualizado con datos oficiales del Ministerio para Oviedo, Gijón y Avilés</span>
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
                         </div>
                     </main>
 
-                    <footer className="bg-emerald-950 text-emerald-400 py-12 text-center text-xs space-y-4 mt-10 p-6 font-medium">
-                        <p className="text-white font-bold text-sm">Precios actualizados el {new Date().toLocaleDateString('es-ES')} a las 08:10</p>
-                        <p className="opacity-40 uppercase tracking-tighter">© 2026 AsturGasol • Los precios pueden variar • Datos MITECO</p>
+                    <footer className="bg-emerald-950 text-emerald-500 py-16 px-10 text-center text-[10px] space-y-4 mt-10 p-6 font-medium">
+                        <p className="text-emerald-100 font-bold text-sm tracking-tighter">AsturGasoil • Asturias</p>
+                        <p className="font-bold opacity-80">Precios actualizados hoy a las 08:10</p>
+                        <p className="opacity-40 uppercase tracking-tighter">
+                            © 2026 AsturGasoil • Los precios reales pueden variar • Información pública del MITECO
+                        </p>
                     </footer>
                 </div>
             );
