@@ -2,7 +2,7 @@ name: Daily Gas Price Update
 
 on:
   schedule:
-        - cron: '10 6 * * *' # 08:10 AM Madrid (CEST)
+    - cron: '10 6 * * *' # 08:10 AM Madrid (CEST)
   workflow_dispatch: # Permite ejecutarlo a mano
 
 jobs:
