@@ -20,6 +20,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Run Scraper (Actualizar base de datos)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node scraper.js
+
       - name: Run Twitter Bot (Midday Mode)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
