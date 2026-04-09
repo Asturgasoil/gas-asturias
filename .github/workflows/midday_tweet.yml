@@ -2,7 +2,7 @@ name: Midday Tweet AsturGasoil
 
 on:
   schedule:
-    - cron: '0 9 * * *' # 11:00 AM Madrid (CEST)
+    - cron: '7 9 * * *' # 11:07 AM Madrid (CEST)
   workflow_dispatch: 
 
 jobs:

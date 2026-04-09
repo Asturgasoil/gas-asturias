@@ -2,7 +2,7 @@ name: Evening Tweet AsturGasoil
 
 on:
   schedule:
-    - cron: '0 14 * * *' # 16:00 PM Madrid (CEST)
+    - cron: '12 14 * * *' # 16:12 PM Madrid (CEST)
   workflow_dispatch: 
 
 jobs:
