@@ -109,6 +109,18 @@ async function run() {
     if (error) throw error;
     console.log("✅ Datos actualizados correctamente en Supabase.");
 
+    console.log("Borrando precios antiguos para mantener la base de datos limpia...");
+    const { error: deleteError } = await supabase
+      .from('prices')
+      .delete()
+      .neq('created_at', batchTimestamp);
+
+    if (deleteError) {
+      console.warn("⚠️ No se pudieron borrar algunos registros antiguos:", deleteError.message);
+    } else {
+      console.log("🧹 Limpieza completada: Solo se mantienen los datos de esta ejecución.");
+    }
+
   } catch (err) {
     console.error("❌ Fallo crítico en el Scraper:", err.message || err);
     process.exit(1);
